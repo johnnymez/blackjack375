@@ -73,10 +73,13 @@ class Game {
 
         if (dealerScore > 21 || playerScore > dealerScore) {
             console.log("Player Wins!");
+            return "Player Wins"
         } else if (dealerScore > playerScore) {
             console.log("Dealer Wins!");
+            return "Dealer Wins";
         } else {
             console.log("Push (Tie)");
+            return "Push (Tie)!";
         }
     }
     getPlayerScore() {
@@ -87,7 +90,5 @@ class Game {
     return this.calculateScore(this.dealerHand);
     }
 }
-
-
 
 export default Game;

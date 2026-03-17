@@ -16,11 +16,18 @@ hitBtn.addEventListener("click", () => {
 });
 
 standBtn.addEventListener("click", () => {
+    const result = game.stand(); //capturing the result
     game.stand();
     showHands(game);
+
+    document.getElementById("playerScore").textContent += ` - ${result}`;
+    hitBtn.disabled = true;
+    standBtn.disabled = true;
 });
 
 restartBtn.addEventListener("click", () => {
+    hitBtn.disabled = false;
+    standBtn.disabled = false;
     game.startGame();
     showHands(game);
 });
@@ -72,5 +79,11 @@ function showHands(game) {
     // update score
     playerScore.textContent = "Score: " + game.getPlayerScore();
     dealerScore.textContent = "Score: " + game.getDealerScore();
+
+    if (game.getPlayerScore() > 21){
+        playerScore.textContent += " - BUST! You lose!";
+        hitBtn.disabled = true;
+        standBtn.disabled = true;
+    }
 }
 
