@@ -11,30 +11,22 @@
   <body>
     
     <div id="layout">
-    <h1>Blackjack</h1>
-    <div id="game">
-    <div id="dealerArea">
-        <h2>Dealer</h2>
-        <div id="dealerCards"></div>
-        <p id="dealerScore">Score: ?</p>
+    <h1>Blackjack</h1>    
+    <div id="enterName">
+        <h3>Please enter your name:</h3>
+        <input type="text" id="nameInput" placeholder="Enter your name here">
     </div>
-
-    <div id="playerArea">
-        <h2>Player</h2>
-        <div id="playerCards"></div>
-        <p id="playerScore">Score: 0</p>
+    <div id="enterRole">
+        <h3>Please choose a role you want to play:</h3>
+        <button class="rolebtn" data-role="./dealerview.html">Dealer</button>
+        <button class="rolebtn" data-role="./playerview.html">Player</button>
     </div>
-
-</div>
-
-<div id="controls">
-    <button id="hit">Hit</button>
-    <button id="stand">Stand</button>
-    <button id="restart">Restart</button>
-</div>
-</div>
+    <br>
+    <div id="nav">
+        <button id="join">Join Game</button>    
+    </div>
+    </div> 
     
-    
-    <script type="module" src="./scripts/main.js"></script>
+    <script type="module" src="./scripts/home.js"></script>
   </body>
 </html>
