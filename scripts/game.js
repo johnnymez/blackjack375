@@ -79,6 +79,15 @@ class Game {
             console.log("Push (Tie)");
         }
     }
+    getPlayerScore() {
+    return this.calculateScore(this.playerHand);
+    }
+
+    getDealerScore() {
+    return this.calculateScore(this.dealerHand);
+    }
 }
+
+
 
 export default Game;
