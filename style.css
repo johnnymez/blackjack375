@@ -36,13 +36,3 @@ body {
     border-radius: 10px;
     text-align: center;
 }
-
-.hidden-card {
-    background: #1e3a8a;
-    color: white;
-}
-
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}

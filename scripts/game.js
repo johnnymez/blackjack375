@@ -7,8 +7,6 @@ class Game {
         this.deck = new Deck();
         this.playerHand = [];
         this.dealerHand = [];
-        this.isRoundOver = false;
-        this.statusMessage = "";
     }
 
     startGame() {
@@ -17,8 +15,6 @@ class Game {
 
         this.playerHand = [];
         this.dealerHand = [];
-        this.isRoundOver = false;
-        this.statusMessage = "Game started. Player's turn.";
 
         // Deal initial cards
         this.playerHand.push(this.deck.dealCard());
@@ -29,11 +25,6 @@ class Game {
 
         console.log("Player Hand:", this.playerHand);
         console.log("Dealer Hand:", this.dealerHand);
-
-        if (this.calculateScore(this.playerHand) === 21){
-            this.statusMessage = "Blackjack! Player!";
-            this.isRoundOver = true;
-        }
     }
 
     // Calculate score
@@ -56,21 +47,19 @@ class Game {
     }
 
     hit() {
-        if (this.isRoundOver) return;
         const card = this.deck.dealCard();
         this.playerHand.push(card);
 
+        console.log("Player drew:", card);
+        console.log("Player Score:", this.calculateScore(this.playerHand));
+
         if (this.calculateScore(this.playerHand) > 21) {
-        this.statusMessage = "Player busts! Dealer wins.";
-        this.isRoundOver = true;
-        } else {
-        this.statusMessage = "Player drew a card.";
+            console.log("Player busts!");
         }
     }
 
     stand() {
-        if (this.isRoundOver) return;
-        this.statusMessage = "Player stands. Dealer's turn.";
+        console.log("Player stands. Dealer's turn.");
 
         while (this.calculateScore(this.dealerHand) < 17) {
             this.dealerHand.push(this.deck.dealCard());
@@ -83,14 +72,12 @@ class Game {
         console.log("Dealer Score:", dealerScore);
 
         if (dealerScore > 21 || playerScore > dealerScore) {
-            this.statusMessage = "Player wins!";
+            console.log("Player Wins!");
         } else if (dealerScore > playerScore) {
-            this.statusMessage = "Dealer wins!";
+            console.log("Dealer Wins!");
         } else {
-            this.statusMessage = "Push (Tie)";
+            console.log("Push (Tie)");
         }
-
-        this.isRoundOver = true;
     }
     getPlayerScore() {
     return this.calculateScore(this.playerHand);
@@ -100,5 +87,7 @@ class Game {
     return this.calculateScore(this.dealerHand);
     }
 }
+
+
 
 export default Game;
