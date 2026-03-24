@@ -3,6 +3,9 @@ import Game from "./game.js";
 const game = new Game();
 
 const homeBtn = document.getElementById("home");
+homeBtn.addEventListener("click", () => {
+    window.location.href = "../../index.html";
+});
 
 const hitBtn = document.getElementById("hit");
 const standBtn = document.getElementById("stand");
@@ -11,11 +14,6 @@ const restartBtn = document.getElementById("restart");
 game.startGame();
 showHands();
 updateButtons();
-
-homeBtn.addEventListener("click", () => {
-    window.location.href = "../../index.html";
-});
-
 
 hitBtn.addEventListener("click", () => {
     game.hit();
