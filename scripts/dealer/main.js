@@ -2,6 +2,11 @@ import Game from "./game.js";
 
 const game = new Game();
 
+const homeBtn = document.getElementById("home");
+homeBtn.addEventListener("click", () => {
+    window.location.href = "../../index.html";
+});
+
 const hitBtn = document.getElementById("hit");
 const standBtn = document.getElementById("stand");
 const restartBtn = document.getElementById("restart");
@@ -48,17 +53,8 @@ function showHands() {
     game.playerHand.forEach(card => {
         const cardEl = document.createElement("img");
         cardEl.classList.add("card");
-        cardEl.src = card.imgPath;
-        cardEl.alt = `${card.name} of ${card.suit}`;
-        playerCardsDiv.appendChild(cardEl);
-    });
 
-    // show dealer cards
-    game.dealerHand.forEach((card, index) => {
-        const cardEl = document.createElement("img");
-        cardEl.classList.add("card");
-
-        if (!game.isRoundOver && index === 1) {
+        if (!game.isRoundOver) {
             // hidden second dealer card during round
             cardEl.src = "image/card_back.png";
             cardEl.alt = "Hidden card";
@@ -66,6 +62,18 @@ function showHands() {
             cardEl.src = card.imgPath;
             cardEl.alt = `${card.name} of ${card.suit}`;
         }
+
+        playerCardsDiv.appendChild(cardEl);
+
+    });
+
+    // show dealer cards
+    game.dealerHand.forEach((card, index) => {
+        const cardEl = document.createElement("img");
+        cardEl.classList.add("card");
+
+        cardEl.src = card.imgPath;
+        cardEl.alt = `${card.name} of ${card.suit}`;
 
         dealerCardsDiv.appendChild(cardEl);
     });
