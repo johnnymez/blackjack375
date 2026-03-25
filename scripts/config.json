@@ -1,0 +1,6 @@
+{
+  "roles": [
+    { "id": "dealer", "name": "Dealer", "path": "./dealer.html" },
+    { "id": "player", "name": "Player", "path": "./player.html" }
+  ]
+}
