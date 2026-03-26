@@ -79,28 +79,9 @@ class Game {
 }
 
     stand() {
-        if (this.isRoundOver) return;
-        this.statusMessage = "Player stands. Dealer's turn.";
-
-        while (this.calculateScore(this.dealerHand) < 17) {
-            this.dealerHand.push(this.deck.dealCard());
-        }
-
-        const playerScore = this.calculateScore(this.playerHand);
-        const dealerScore = this.calculateScore(this.dealerHand);
-
-        console.log("Player Score:", playerScore);
-        console.log("Dealer Score:", dealerScore);
-
-        if (dealerScore > 21 || playerScore > dealerScore) {
-            this.statusMessage = "Player wins!";
-        } else if (dealerScore > playerScore) {
-            this.statusMessage = "Dealer wins!";
-        } else {
-            this.statusMessage = "Push (Tie)";
-        }
-        this.isRoundOver = true;
-    }
+    if (this.isRoundOver) return;
+    this.statusMessage = "Player stands. Dealer's turn.";
+}
     getPlayerScore() {
     return this.calculateScore(this.playerHand);
     }
@@ -108,6 +89,32 @@ class Game {
     getDealerScore() {
     return this.calculateScore(this.dealerHand);
     }
+
+    dealerDrawCard() {
+    const card = this.deck.dealCard();
+    this.dealerHand.push(card);
+    return card;
+}
+
+    finishDealerTurn() {
+    const playerScore = this.calculateScore(this.playerHand);
+    const dealerScore = this.calculateScore(this.dealerHand);
+
+    console.log("Player Score:", playerScore);
+    console.log("Dealer Score:", dealerScore);
+
+    if (dealerScore > 21 || playerScore > dealerScore) {
+        this.statusMessage = "Player wins!";
+    } else if (dealerScore > playerScore) {
+        this.statusMessage = "Dealer wins!";
+    } else {
+        this.statusMessage = "Push (Tie)";
+    }
+
+    this.isRoundOver = true;
+}
+
+
 }
 
 
