@@ -18,10 +18,25 @@ async function joinGame () {
 }
 const joinGameBtn = document.getElementById('join');
 joinGameBtn.addEventListener('click', joinGame);
-window.addEventListener('keypress', event => {
+// Allow pressing Enter to join game
+window.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
         event.preventDefault();
         joinGame();
+    }
+});
+// Pressing I for instructions
+window.addEventListener('keydown', event => {
+    if (event.key === 'I' || event.key === 'i') {
+        event.preventDefault();
+        window.location.href = "../../instruction.html";
+    }
+});
+//Pressing L for leaderboard
+window.addEventListener('keydown', event => {
+    if (event.key === 'L' || event.key === 'l') {
+        event.preventDefault();
+        window.location.href = "../../leaderboard.html";
     }
 });
 
