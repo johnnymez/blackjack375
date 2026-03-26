@@ -5,11 +5,7 @@
         "defaultUsername": "Anonymous"
         },
     
-    // "roles": [
-    //     { "id": "dealer", "name": "Dealer", "path": "./dealer.html" },
-    //     { "id": "player", "name": "Player", "path": "./player.html" }
-    //     ],
-
+    
   "assets": {
         "cardBack": "image/card_back.png",
         "spritesheet": "image/cards_spritesheet.png"
