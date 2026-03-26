@@ -39,7 +39,7 @@ homeBtn.addEventListener("click", () => {
 window.addEventListener("keydown", (event) => {
     if (event.key === "Esc" || event.key === "Escape") {
         event.preventDefault();
-        window.location.href = "../../index.html";
+        window.location.href = "index.html";
     }
 });
 

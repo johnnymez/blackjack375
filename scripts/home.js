@@ -11,7 +11,7 @@ async function joinGame () {
             localStorage.setItem('username', finalUsername);
         }
 
-        window.location.href = "../../player.html";
+        window.location.href = "player.html";
     } catch (error) {
         console.error('Error saving username to localStorage:', error);
     }
