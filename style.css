@@ -36,3 +36,25 @@ body {
     border-radius: 10px;
     text-align: center;
 }
+
+#deckArea {
+    margin: 20px 0;
+    text-align: center;
+}
+
+#hitDeck {
+    width: 60px;
+    height: 90px;
+    cursor: grab;
+    border-radius: 6px;
+}
+
+#hitDeck:active {
+    cursor: grabbing;
+}
+
+#playerCards.drag-over {
+    outline: 3px dashed #333;
+    outline-offset: 6px;
+    border-radius: 8px;
+}

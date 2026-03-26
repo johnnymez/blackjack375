@@ -3,7 +3,8 @@ import Game from "./game.js";
 const game = new Game();
 
 const homeBtn = document.getElementById("home");
-const hitBtn = document.getElementById("hit");
+const hitDeck = document.getElementById("hitDeck");
+const playerCardsDiv = document.getElementById("playerCards");
 const standBtn = document.getElementById("stand");
 const restartBtn = document.getElementById("restart");
 
@@ -18,58 +19,92 @@ function sleep(ms) {
 
 // disable all action buttons while processing
 function setActionButtonsDisabled(disabled) {
-    hitBtn.disabled = disabled;
+    hitDeck.draggable = !disabled;
+    hitDeck.style.opacity = disabled ? "0.5" : "1";
     standBtn.disabled = disabled;
-    restartBtn.disabled = disabled;
 }
 
 game.startGame();
 showHands();
 updateButtons();
 
-hitBtn.addEventListener("click", async () => {
-    if (game.isRoundOver) return;
+hitDeck.addEventListener("dragstart", (event) => {
+    if (game.isRoundOver) {
+        event.preventDefault();
+        return;
+    }
+
+    if (standBtn.disabled) {
+        event.preventDefault();
+        return;
+    }
+
+    event.dataTransfer.setData("text/plain", "hit-card");
+});
+
+    playerCardsDiv.addEventListener("dragover", (event) => {
+    if (game.isRoundOver || standBtn.disabled) return;
+
+    event.preventDefault();
+    playerCardsDiv.classList.add("drag-over");
+});
+
+    playerCardsDiv.addEventListener("dragleave", () => {
+    playerCardsDiv.classList.remove("drag-over");
+});
+
+    playerCardsDiv.addEventListener("drop", async (event) => {
+    event.preventDefault();
+    playerCardsDiv.classList.remove("drag-over");
+
+    if (game.isRoundOver || standBtn.disabled) return;
+
+    const draggedItem = event.dataTransfer.getData("text/plain");
+    if (draggedItem !== "hit-card") return;
 
     setActionButtonsDisabled(true);
-    game.statusMessage = "Player chooses Hit...";
+    game.statusMessage = "Player draws a card...";
     showHands();
 
-    await sleep(1000);
+    await sleep(800);
 
     game.hit();
     showHands();
     updateButtons();
 
-    await sleep(500);
-    setActionButtonsDisabled(false);
+    await sleep(400);
+
+    if (!game.isRoundOver) {
+        setActionButtonsDisabled(false);
+    }
     updateButtons();
 });
 
-standBtn.addEventListener("click", async () => {
+    standBtn.addEventListener("click", async () => {
     if (game.isRoundOver) return;
 
     setActionButtonsDisabled(true);
     game.statusMessage = "Player chooses Stand...";
     showHands();
 
-    await sleep(1000);
+    await sleep(800);
 
     game.stand();
     showHands();
 
-    await sleep(1000);
+    await sleep(800);
 
     // dealer draws one card at a time with delay
     while (game.getDealerScore() < 17) {
         game.statusMessage = "Dealer draws a card...";
         showHands();
 
-        await sleep(1200);
+        await sleep(900);
 
         game.dealerDrawCard();
         showHands();
 
-        await sleep(1200);
+        await sleep(900);
     }
 
     game.finishDealerTurn();
@@ -85,7 +120,7 @@ restartBtn.addEventListener("click", async () => {
     game.statusMessage = "Starting new round...";
     showHands();
 
-    await sleep(800);
+    await sleep(600);
 
     game.startGame();
     showHands();
@@ -95,7 +130,8 @@ restartBtn.addEventListener("click", async () => {
 });
 
 function updateButtons() {
-    hitBtn.disabled = game.isRoundOver;
+    hitDeck.draggable = !game.isRoundOver;
+    hitDeck.style.opacity = game.isRoundOver ? "0.5" : "1";
     standBtn.disabled = game.isRoundOver;
 }
 
