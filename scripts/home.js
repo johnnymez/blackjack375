@@ -40,6 +40,7 @@ async function loadRoles() {
     }
 }
 
+//Join Game button logic
 const joinGameBtn = document.getElementById('join');
 joinGameBtn.addEventListener('click', () => {
     const selectedPath = localStorage.getItem('selectedRolePath');
@@ -63,6 +64,11 @@ joinGameBtn.addEventListener('click', async () => {
     }
 });
 
+// Instructions button logic
+const instructionBtn = document.getElementById('instruction');
+instructionBtn.addEventListener('click', () => {
+    alert("Welcome to Blackjack!\n\nRules:\n- Get as close to 21 as you can without going over.\n- Dealer must hit until they have at least 17.\n- You can hit, stand, double down, or split.\n- Good luck!");
+});
 
 // Initialize when the page is ready
 window.addEventListener('DOMContentLoaded', loadRoles);

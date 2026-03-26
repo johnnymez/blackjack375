@@ -7,6 +7,7 @@ const homeBtn = document.getElementById("home");
 const hitDeck = document.getElementById("hitDeck");
 const playerCardsDiv = document.getElementById("playerCards");
 const standBtn = document.getElementById("stand");
+const betBtn = document.getElementById("bet-btn");
 const restartBtn = document.getElementById("restart");
 let delayDealerReveal = false;
 
