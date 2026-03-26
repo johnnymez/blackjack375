@@ -1,56 +1,49 @@
-async function loadRoles() {
-    try {
-        // Load JSON file
-        const response = await fetch('./scripts/config.json');
-        if (!response.ok) throw new Error("Failed to load config.json");
+// async function loadRoles() {
+//     try {
+//         // Load JSON file
+//         const response = await fetch('./scripts/config.json');
+//         if (!response.ok) throw new Error("Failed to load config.json");
         
-        const data = await response.json();
+//         const data = await response.json();
         
-        // Buttons container
-        const container = document.getElementById('roleButtonContainer');
-        container.innerHTML = ''; // Clear "Loading..." or old button
+//         // Buttons container
+//         const container = document.getElementById('roleButtonContainer');
+//         container.innerHTML = ''; // Clear "Loading..." or old button
 
-        // Get roles from JSON and create buttons
-        data.roles.forEach(role => {
-            const btn = document.createElement('button');
-            btn.textContent = role.name;
-            btn.className = "rolebtn";
+//         // Get roles from JSON and create buttons
+//         data.roles.forEach(role => {
+//             const btn = document.createElement('button');
+//             btn.textContent = role.name;
+//             btn.className = "rolebtn";
             
-            // Save selection to localStorage on click
-            btn.onclick = () => {
-                document.querySelectorAll('.rolebtn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
+//             // Save selection to localStorage on click
+//             btn.onclick = () => {
+//                 document.querySelectorAll('.rolebtn').forEach(b => b.classList.remove('selected'));
+//                 btn.classList.add('selected');
                 
-                // Save the path to "Join Game" button
-                localStorage.setItem('selectedRolePath', role.path);
-                console.log(`Role selected: ${role.name}`);
+//                 // Save the path to "Join Game" button
+//                 localStorage.setItem('selectedRolePath', role.path);
+//                 console.log(`Role selected: ${role.name}`);
 
-                // Change color of selected button
-                document.querySelectorAll('.rolebtn').forEach(b => b.style.backgroundColor = '');
-                btn.style.backgroundColor = '#A9A9A9'; // Green
-            };
+//                 // Change color of selected button
+//                 document.querySelectorAll('.rolebtn').forEach(b => b.style.backgroundColor = '');
+//                 btn.style.backgroundColor = '#A9A9A9'; // Green
+//             };
 
-            container.appendChild(btn);
-        });
+//             container.appendChild(btn);
+//         });
 
-    } catch (error) {
-        console.error("Error initializing roles:", error);
-        document.getElementById('roleButtonContainer').innerHTML = 
-            `<p style="color:red">Error loading roles. Check console.</p>`;
-    }
-}
+//     } catch (error) {
+//         console.error("Error initializing roles:", error);
+//         document.getElementById('roleButtonContainer').innerHTML = 
+//             `<p style="color:red">Error loading roles. Check console.</p>`;
+//     }
+// }
 
 //Join Game button logic
 const joinGameBtn = document.getElementById('join');
 joinGameBtn.addEventListener('click', () => {
-    const selectedPath = localStorage.getItem('selectedRolePath');
-    if (selectedPath) {
-        window.location.href = selectedPath;
-    } else {
-        alert("Please select a role before joining the game.");
-    }
-
-    localStorage.removeItem('selectedRolePath'); // Clear selection after use
+    window.location.href = "../../player.html";
 });
 joinGameBtn.addEventListener('click', async () => {
     const response = await fetch('./scripts/config.json');
@@ -76,4 +69,4 @@ leaderboardBtn.addEventListener('click', () => {
 });
 
 // Initialize when the page is ready
-window.addEventListener('DOMContentLoaded', loadRoles);
+// window.addEventListener('DOMContentLoaded', loadRoles);

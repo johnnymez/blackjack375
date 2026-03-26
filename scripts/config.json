@@ -5,10 +5,10 @@
         "defaultUsername": "Anonymous"
         },
     
-    "roles": [
-        { "id": "dealer", "name": "Dealer", "path": "./dealer.html" },
-        { "id": "player", "name": "Player", "path": "./player.html" }
-        ],
+    // "roles": [
+    //     { "id": "dealer", "name": "Dealer", "path": "./dealer.html" },
+    //     { "id": "player", "name": "Player", "path": "./player.html" }
+    //     ],
 
   "assets": {
         "cardBack": "image/card_back.png",
@@ -31,12 +31,11 @@
         { "name": "Q", "value": 10 }
         ],
 
-    "instruction": [
-        "Welcome to the Blackjack Game!",
-        "The goal is to get as close to 21 as possible without going over.",
-        "Each player starts with two cards and can choose to 'Hit' (get another card) or 'Stand' (keep current hand).",
-        "The dealer will reveal their hidden card after all players have finished their turns.",
-        "If your hand exceeds 21, you lose. If the dealer's hand exceeds 21, you win!",
-        "Good luck and have fun playing!"
+    "leaderboard": [
+        { "rank": 1, "name": "Alice", "wins": 15 },
+        { "rank": 2, "name": "Bob", "wins": 12 },
+        { "rank": 3, "name": "Charlie", "wins": 10 },
+        { "rank": 4, "name": "David", "wins": 8 },
+        { "rank": 5, "name": "Eve", "wins": 5 }
     ]
 }
