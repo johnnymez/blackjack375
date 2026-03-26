@@ -1,5 +1,5 @@
 import Game from "./game.js";
-import { updateUsername } from '../utils.js';
+import { updateUsername } from "../utils.js";
 
 const game = new Game(updateUsername());
 
@@ -8,38 +8,43 @@ const hitDeck = document.getElementById("hitDeck");
 const playerCardsDiv = document.getElementById("playerCards");
 const standBtn = document.getElementById("stand");
 const restartBtn = document.getElementById("restart");
+const doubleBtn = document.getElementById("double");
+const splitBtn = document.getElementById("split");
+const surrenderBtn = document.getElementById("surrender");
+
 let delayDealerReveal = false;
 
 homeBtn.addEventListener("click", () => {
     window.location.href = "../../index.html";
 });
 
-// Load initial balance from JSON config
 async function loadInitialBalance() {
     try {
-        const response = await fetch('./scripts/config.json');
+        const response = await fetch("./scripts/config.json");
         if (!response.ok) throw new Error("Failed to load config.json");
+
         const data = await response.json();
-        const balance = data.initialState.initialBalance || 1000;
-        document.getElementById('balance').textContent = balance;
+        const balance = data.initialState.defaultBankroll || 1000;
+        document.getElementById("balance").textContent = balance;
     } catch (error) {
         console.error("Error loading initial balance:", error);
-        document.getElementById('balance').textContent = "Error";
+        document.getElementById("balance").textContent = "Error";
     }
 }
 
-loadInitialBalance(); 
+loadInitialBalance();
 
-// small helper function for delay
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// disable all action buttons while processing
 function setActionButtonsDisabled(disabled) {
     hitDeck.draggable = !disabled;
     hitDeck.style.opacity = disabled ? "0.5" : "1";
     standBtn.disabled = disabled;
+    doubleBtn.disabled = disabled;
+    splitBtn.disabled = disabled;
+    surrenderBtn.disabled = disabled;
 }
 
 game.startGame().then(() => {
@@ -50,13 +55,28 @@ game.startGame().then(() => {
     updateButtons();
 });
 
-hitDeck.addEventListener("dragstart", (event) => {
-    if (game.isRoundOver) {
-        event.preventDefault();
-        return;
+async function runDealerTurn() {
+    game.statusMessage = "Dealer's turn.";
+    showHands();
+    await sleep(1000);
+
+    while (game.getDealerScore() < 17) {
+        game.statusMessage = "Dealer draws a card...";
+        showHands();
+        await sleep(1000);
+
+        game.dealerDrawCard();
+        showHands();
+        await sleep(1000);
     }
 
-    if (standBtn.disabled) {
+    game.finishDealerTurn();
+    showHands();
+    updateButtons();
+}
+
+hitDeck.addEventListener("dragstart", (event) => {
+    if (game.isRoundOver || standBtn.disabled) {
         event.preventDefault();
         return;
     }
@@ -64,18 +84,18 @@ hitDeck.addEventListener("dragstart", (event) => {
     event.dataTransfer.setData("text/plain", "hit-card");
 });
 
-    playerCardsDiv.addEventListener("dragover", (event) => {
+playerCardsDiv.addEventListener("dragover", (event) => {
     if (game.isRoundOver || standBtn.disabled) return;
 
     event.preventDefault();
     playerCardsDiv.classList.add("drag-over");
 });
 
-    playerCardsDiv.addEventListener("dragleave", () => {
+playerCardsDiv.addEventListener("dragleave", () => {
     playerCardsDiv.classList.remove("drag-over");
 });
 
-    playerCardsDiv.addEventListener("drop", async (event) => {
+playerCardsDiv.addEventListener("drop", async (event) => {
     event.preventDefault();
     playerCardsDiv.classList.remove("drag-over");
 
@@ -85,63 +105,144 @@ hitDeck.addEventListener("dragstart", (event) => {
     if (draggedItem !== "hit-card") return;
 
     setActionButtonsDisabled(true);
-    game.statusMessage = `${game.username} draws a card...`;
+    game.statusMessage = `${game.splitMode ? `Hand ${game.currentHandIndex + 1}` : game.username} draws a card...`;
     showHands();
-
-    await sleep(800);
+    await sleep(700);
 
     game.hit();
+    showHands();
+    await sleep(700);
 
-    // if player busts still keep dealer hidden until reveal delay
-    if (game.isRoundOver) {
-        delayDealerReveal = true;
-        showHands();          
-        await sleep(1000);    
-        delayDealerReveal = false;
-        showHands();          
+if (game.isCurrentHandBust()) {
+    if (game.moveToNextHand()) {
+        game.statusMessage = `Hand 1 busts. Playing hand 2.`;
+        showHands();
+        await sleep(900);
+        setActionButtonsDisabled(false);
         updateButtons();
         return;
     }
 
+    // no more hands left
+    if (game.hasActiveHand()) {
+        await runDealerTurn();
+        setActionButtonsDisabled(false);
+        updateButtons();
+        return;
+    }
+
+    delayDealerReveal = true;
+    showHands();
+    await sleep(900);
+    delayDealerReveal = false;
+
+    game.finishPlayerBustRound();
     showHands();
     updateButtons();
-
-    await sleep(400);
+    return;
+}
 
     setActionButtonsDisabled(false);
     updateButtons();
 });
 
-    standBtn.addEventListener("click", async () => {
+standBtn.addEventListener("click", async () => {
     if (game.isRoundOver) return;
 
     setActionButtonsDisabled(true);
-    game.statusMessage = `${game.username} chooses Stand...`;
-    showHands();
 
-    await sleep(1000);
-
-    game.stand();
-    showHands();
-
-    await sleep(1000);
-
-    // dealer draws one card at a time with delay
-    while (game.getDealerScore() < 17) {
-        game.statusMessage = "Dealer draws a card...";
-        showHands();
-
-        await sleep(1200);
-
-        game.dealerDrawCard();
-        showHands();
-
-        await sleep(1200);
+    if (game.splitMode) {
+        game.statusMessage = `Hand ${game.currentHandIndex + 1} stands.`;
+    } else {
+        game.statusMessage = `${game.username} stands.`;
     }
 
-    game.finishDealerTurn();
     showHands();
+    await sleep(800);
+
+    if (game.moveToNextHand()) {
+        game.statusMessage = `Playing hand 2.`;
+        showHands();
+        await sleep(800);
+        setActionButtonsDisabled(false);
+        updateButtons();
+        return;
+    }
+
+    await runDealerTurn();
+    setActionButtonsDisabled(false);
     updateButtons();
+});
+
+doubleBtn.addEventListener("click", async () => {
+    if (game.isRoundOver || !game.canDouble()) return;
+
+    setActionButtonsDisabled(true);
+    game.statusMessage = `${game.splitMode ? `Hand ${game.currentHandIndex + 1}` : game.username} doubles.`;
+    showHands();
+    await sleep(700);
+
+    game.doubleCurrentHand();
+    showHands();
+    await sleep(900);
+
+    if (game.isCurrentHandBust()) {
+        if (game.moveToNextHand()) {
+            game.statusMessage = `Current hand busts. Playing next hand.`;
+            showHands();
+            await sleep(800);
+            setActionButtonsDisabled(false);
+            updateButtons();
+            return;
+        }
+
+        delayDealerReveal = true;
+        showHands();
+        await sleep(900);
+        delayDealerReveal = false;
+
+        game.finishPlayerBustRound();
+        showHands();
+        updateButtons();
+        return;
+    }
+
+    if (game.moveToNextHand()) {
+        game.statusMessage = `Double complete. Playing hand 2.`;
+        showHands();
+        await sleep(800);
+        setActionButtonsDisabled(false);
+        updateButtons();
+        return;
+    }
+
+    await runDealerTurn();
+    setActionButtonsDisabled(false);
+    updateButtons();
+});
+
+splitBtn.addEventListener("click", async () => {
+    if (game.isRoundOver || !game.canSplit()) {
+        alert("You can only split when your first two cards have the same value.");
+        return;
+    }
+
+    setActionButtonsDisabled(true);
+
+    // show message
+    game.statusMessage = "Splitting hand...";
+    showHands();
+    await sleep(800);
+
+    // split
+    game.splitHand();
+    showHands();
+    await sleep(800);
+
+    // Transition to first hand
+    game.statusMessage = "Playing hand 1";
+    showHands();
+    await sleep(800);
 
     setActionButtonsDisabled(false);
     updateButtons();
@@ -154,42 +255,85 @@ restartBtn.addEventListener("click", async () => {
 
     await sleep(800);
 
+    delayDealerReveal = false;
     await game.startGame();
+
+    if (hitDeck) {
+        hitDeck.src = game.deck.cardBackPath;
+    }
+
     showHands();
     updateButtons();
-
     setActionButtonsDisabled(false);
+});
+
+surrenderBtn.addEventListener("click", async () => {
+    if (game.isRoundOver || !game.canSurrender()) return;
+
+    setActionButtonsDisabled(true);
+
+    game.statusMessage = `${game.username} chooses to surrender...`;
+    showHands();
+    await sleep(800);
+
+    game.surrender();
+    showHands();
+    updateButtons();
 });
 
 function updateButtons() {
     hitDeck.draggable = !game.isRoundOver;
     hitDeck.style.opacity = game.isRoundOver ? "0.5" : "1";
+
     standBtn.disabled = game.isRoundOver;
+    restartBtn.disabled = false;
+    doubleBtn.disabled = game.isRoundOver || !game.canDouble();
+    splitBtn.disabled = game.isRoundOver || !game.canSplit();
+    surrenderBtn.disabled = game.isRoundOver || !game.canSurrender();
 }
 
 function showHands() {
-    const playerCardsDiv = document.getElementById("playerCards");
+    const playerCardsContainer = document.getElementById("playerCards");
     const dealerCardsDiv = document.getElementById("dealerCards");
 
     const playerScore = document.getElementById("playerScore");
     const dealerScore = document.getElementById("dealerScore");
     const gameStatus = document.getElementById("gameStatus");
 
-    playerCardsDiv.innerHTML = "";
+    playerCardsContainer.innerHTML = "";
     dealerCardsDiv.innerHTML = "";
 
-    // show player cards
-    game.playerHand.forEach(card => {
-        const cardImgElement = card.render();
-        cardImgElement.alt = `${card.name} of ${card.suit}`; 
-        playerCardsDiv.appendChild(cardImgElement);
+    game.playerHands.forEach((hand, index) => {
+        const handWrapper = document.createElement("div");
+        handWrapper.classList.add("hand-wrapper");
+
+        if (game.splitMode && index === game.currentHandIndex && !game.isRoundOver) {
+            handWrapper.classList.add("active-hand");
+        }
+
+        const handLabel = document.createElement("p");
+        handLabel.textContent = game.splitMode ? `Hand ${index + 1} - Score: ${game.calculateScore(hand)}` : "";
+        if (game.splitMode) {
+            handWrapper.appendChild(handLabel);
+        }
+
+        const cardsRow = document.createElement("div");
+        cardsRow.classList.add("split-hand-row");
+
+        hand.forEach(card => {
+            const cardImgElement = card.render();
+            cardImgElement.alt = `${card.name} of ${card.suit}`;
+            cardsRow.appendChild(cardImgElement);
+        });
+
+        handWrapper.appendChild(cardsRow);
+        playerCardsContainer.appendChild(handWrapper);
     });
 
-    // show dealer cards
     game.dealerHand.forEach((card, index) => {
         let cardImgElement;
 
-        if ((!game.isRoundOver || delayDealerReveal)&& index === 1) {
+        if ((!game.isRoundOver || delayDealerReveal) && index === 1) {
             cardImgElement = document.createElement("img");
             cardImgElement.classList.add("card");
             cardImgElement.src = game.deck.cardBackPath;
@@ -202,7 +346,11 @@ function showHands() {
         dealerCardsDiv.appendChild(cardImgElement);
     });
 
-    playerScore.textContent = "Score: " + game.getPlayerScore();
+    if (game.splitMode) {
+        playerScore.textContent = `Current hand score: ${game.getPlayerScore()}`;
+    } else {
+        playerScore.textContent = "Score: " + game.getPlayerScore();
+    }
 
     if (game.isRoundOver) {
         dealerScore.textContent = "Score: " + game.getDealerScore();

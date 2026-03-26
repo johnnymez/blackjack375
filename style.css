@@ -58,3 +58,21 @@ body {
     outline-offset: 6px;
     border-radius: 8px;
 }
+
+.hand-wrapper {
+    margin-bottom: 12px;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.active-hand {
+    outline: 3px solid #333;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.split-hand-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 6px 0;
+}
