@@ -32,6 +32,49 @@ body {
 
 #controls {
     margin-top: 25px;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+#betsystem {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 10px;
+    transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+#game {
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+#betPrompt {
+    margin: 8px 0 12px;
+    font-weight: 700;
+    color: #14532d;
+}
+
+#layout.awaiting-bet #betsystem {
+    background-color: rgba(56, 140, 60, 0.1);
+    box-shadow: 0 0 0 3px rgba(56, 140, 60, 0.25);
+}
+
+#layout.awaiting-bet #bet-btn {
+    font-weight: 700;
+}
+
+.gameplay-disabled {
+    opacity: 0.45;
+    filter: grayscale(0.35);
+    pointer-events: none;
+}
+
+#historyList {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+}
+
+#historyList li {
+    margin: 4px 0;
 }
 
 #layout {

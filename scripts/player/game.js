@@ -14,6 +14,7 @@ class Game {
         this.isRoundOver = false;
         this.statusMessage = "";
         this.splitMode = false;
+        this.roundResults = [];
     }
 
     async startGame() {
@@ -25,6 +26,7 @@ class Game {
         this.dealerHand = [];
         this.isRoundOver = false;
         this.splitMode = false;
+        this.roundResults = [];
         this.statusMessage = `Game started. ${this.username}'s turn.`;
 
         this.playerHands[0].push(this.deck.dealCard());
@@ -39,12 +41,15 @@ class Game {
         if (playerScore === 21 && dealerScore === 21) {
             this.statusMessage = "Push (Both Blackjack)";
             this.isRoundOver = true;
+            this.roundResults = ["tie"];
         } else if (playerScore === 21) {
             this.statusMessage = `Blackjack! ${this.username} wins!`;
             this.isRoundOver = true;
+            this.roundResults = ["win"];
         } else if (dealerScore === 21) {
             this.statusMessage = "Dealer has Blackjack!";
             this.isRoundOver = true;
+            this.roundResults = ["loss"];
         }
     }
 
@@ -102,8 +107,8 @@ class Game {
     }
 
     hasActiveHand() {
-    return this.playerHands.some(hand => this.calculateScore(hand) <= 21);
-}
+        return this.playerHands.some(hand => this.calculateScore(hand) <= 21);
+    }
 
     moveToNextHand() {
         if (this.splitMode && this.currentHandIndex < this.playerHands.length - 1) {
@@ -159,6 +164,8 @@ class Game {
     }
 
     finishPlayerBustRound() {
+        this.roundResults = this.playerHands.map(() => "loss");
+
         if (!this.splitMode) {
             this.statusMessage = `${this.username} busts! Dealer wins.`;
         } else {
@@ -182,6 +189,7 @@ class Game {
     finishDealerTurn() {
         const dealerScore = this.calculateScore(this.dealerHand);
         const results = [];
+        this.roundResults = [];
 
         this.playerHands.forEach((hand, index) => {
             const playerScore = this.calculateScore(hand);
@@ -189,33 +197,52 @@ class Game {
 
             if (playerScore > 21) {
                 results.push(`${handLabel} busts`);
+                this.roundResults.push("loss");
             } else if (dealerScore > 21 || playerScore > dealerScore) {
                 results.push(`${handLabel} wins`);
+                this.roundResults.push("win");
             } else if (dealerScore > playerScore) {
                 results.push(`${handLabel} loses`);
+                this.roundResults.push("loss");
             } else {
                 results.push(`${handLabel} pushes`);
+                this.roundResults.push("tie");
             }
         });
 
         this.statusMessage = results.join(" | ");
         this.isRoundOver = true;
     }
-        canSurrender() {
-    return (
-        !this.isRoundOver &&
-        !this.splitMode &&
-        this.getCurrentHand().length === 2
-    );
-}
+
+    canSurrender() {
+        return (
+            !this.isRoundOver &&
+            !this.splitMode &&
+            this.getCurrentHand().length === 2
+        );
+    }
 
     surrender() {
-    if (!this.canSurrender()) return false;
+        if (!this.canSurrender()) return false;
 
-    this.statusMessage = `${this.username} surrendered. Dealer wins half the bet.`;
-    this.isRoundOver = true;
-    return true;
-}
+        this.statusMessage = `${this.username} surrendered. Dealer wins half the bet.`;
+        this.isRoundOver = true;
+        this.roundResults = ["loss"];
+        return true;
+    }
+
+    getRoundResult() {
+        if (this.roundResults.length === 0) return null;
+
+        const hasWin = this.roundResults.includes("win");
+        const hasLoss = this.roundResults.includes("loss");
+        const hasTie = this.roundResults.includes("tie");
+
+        if (hasWin && hasLoss) return "tie";
+        if (hasWin) return "win";
+        if (hasTie && !hasLoss) return "tie";
+        return "loss";
+    }
 }
 
 export default Game;

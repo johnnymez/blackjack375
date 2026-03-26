@@ -43,11 +43,19 @@
 
       <div id="betsystem">
         <p>Bankroll: $<span id="balance">0</span></p>
+        <p>Current Bet: $<span id="currentBet">0</span></p>
+        <p>Last Result: <span id="lastResult">Place a bet to deal.</span></p>
+        <p id="betPrompt">Place a bet to unlock the table.</p>
         
         <label for="bet-input">Place your bet:</label>
         <input type="number" id="bet-input" min="10" step="10" value="10">
         
         <button id="bet-btn">Bet Now</button>
+
+        <div id="historyPanel">
+          <p>Recent Results</p>
+          <ul id="historyList"></ul>
+        </div>
       </div>
 
       <div id="controls">
