@@ -1,5 +1,17 @@
 import Game from "./game.js";
 import { updateUsername } from "../utils.js";
+import {
+    updateWinLossDisplay,
+    setGameplayActive,
+    setActionButtonsDisabled,
+    updateButtons,
+    showHands
+} from "./uiController.js";
+import {
+    updateBettingDisplay,
+    loadInitialBalance,
+    finalizeRound
+} from "./bettingManager.js";
 
 const game = new Game(updateUsername());
 
@@ -33,70 +45,61 @@ let lossCount = 0;
 let delayDealerReveal = false;
 
 homeBtn.addEventListener("click", () => {
-    window.location.href = "index.html";
+    window.location.href = "../../index.html";
 });
 
 window.addEventListener("keydown", (event) => {
     if (event.key === "Esc" || event.key === "Escape") {
         event.preventDefault();
-        window.location.href = "index.html";
+        window.location.href = "../../index.html";
     }
 });
-
-async function loadInitialBalance() {
-    try {
-        const response = await fetch("./scripts/config.json");
-        if (!response.ok) throw new Error("Failed to load config.json");
-
-        const data = await response.json();
-        playerMoney = data.initialState.defaultBankroll || 1000;
-    } catch (error) {
-        console.error("Error loading initial balance:", error);
-        playerMoney = 1000;
-    }
-
-    updateBettingDisplay();
-}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function formatCurrency(amount) {
-    return amount.toString();
-}
+function applyRoundResult() {
+    const roundState = finalizeRound(
+        game,
+        currentBet,
+        playerMoney,
+        winCount,
+        lossCount,
+        lastResult,
+        gameHistory
+    );
 
-function updateHistoryList() {
-    if (!historyList) return;
+    currentBet = roundState.currentBet;
+    playerMoney = roundState.playerMoney;
+    winCount = roundState.winCount;
+    lossCount = roundState.lossCount;
+    lastResult = roundState.lastResult;
+    gameHistory = roundState.gameHistory;
 
-    historyList.innerHTML = "";
-
-    gameHistory
-        .slice(-3)
-        .reverse()
-        .forEach((entry) => {
-            const item = document.createElement("li");
-            item.textContent = `${entry.result.toUpperCase()} | Bet: $${entry.bet} | Total: $${entry.total}`;
-            historyList.appendChild(item);
-        });
-}
-
-function updateBettingDisplay() {
-    balanceDisplay.textContent = formatCurrency(playerMoney);
-    currentBetDisplay.textContent = formatCurrency(currentBet);
-    lastResultDisplay.textContent = lastResult;
-    updateHistoryList();
-}
-
-function updateWinLossDisplay() {
-    winDisplay.textContent = winCount;
-    lossDisplay.textContent = lossCount;
-}
-
-function setGameplayActive(isActive) {
-    layout.classList.toggle("awaiting-bet", !isActive);
-    gameArea.classList.toggle("gameplay-disabled", !isActive);
-    controls.classList.toggle("gameplay-disabled", !isActive);
+    updateWinLossDisplay(winDisplay, lossDisplay, winCount, lossCount);
+    updateBettingDisplay(
+        balanceDisplay,
+        currentBetDisplay,
+        lastResultDisplay,
+        historyList,
+        playerMoney,
+        currentBet,
+        lastResult,
+        gameHistory
+    );
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 }
 
 function setWaitingForBetState(message = "Place a bet to deal.") {
@@ -110,40 +113,30 @@ function setWaitingForBetState(message = "Place a bet to deal.") {
     game.roundResults = [];
     game.statusMessage = message;
 
-    setGameplayActive(false);
-    showHands();
-    updateButtons();
-    updateBettingDisplay();
-}
-
-function finalizeRound() {
-    if (!game.isRoundOver || currentBet <= 0) return;
-
-    const result = game.getRoundResult() || "loss";
-    const settledBet = currentBet;
-
-    if (result === "win") {
-        playerMoney += settledBet * 2;
-        winCount++;
-        lastResult = `Win! Paid $${settledBet * 2}.`;
-    } else if (result === "tie") {
-        playerMoney += settledBet;
-        lastResult = `Tie. Returned $${settledBet}.`;
-    } else {
-        lossCount++;
-        lastResult = `Loss. Lost $${settledBet}.`;
-    }
-
-    gameHistory.push({
-        result,
-        bet: settledBet,
-        total: playerMoney
-    });
-
-    currentBet = 0;
-    updateWinLossDisplay();
-    updateBettingDisplay();
-    updateButtons();
+    setGameplayActive(layout, gameArea, controls, false);
+    showHands(game, playerCardsDiv, delayDealerReveal);
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
+    updateBettingDisplay(
+        balanceDisplay,
+        currentBetDisplay,
+        lastResultDisplay,
+        historyList,
+        playerMoney,
+        currentBet,
+        lastResult,
+        gameHistory
+    );
 }
 
 async function startRoundFromBet() {
@@ -162,10 +155,30 @@ async function startRoundFromBet() {
     currentBet = betAmount;
     playerMoney -= betAmount;
     lastResult = `Bet placed: $${betAmount}`;
-    setGameplayActive(true);
-    updateBettingDisplay();
-    updateButtons();
-    setActionButtonsDisabled(true);
+    setGameplayActive(layout, gameArea, controls, true);
+    updateBettingDisplay(
+        balanceDisplay,
+        currentBetDisplay,
+        lastResultDisplay,
+        historyList,
+        playerMoney,
+        currentBet,
+        lastResult,
+        gameHistory
+    );
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
 
     await game.startGame();
 
@@ -173,45 +186,58 @@ async function startRoundFromBet() {
         hitDeck.src = game.deck.cardBackPath;
     }
 
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
 
     if (game.isRoundOver) {
-        finalizeRound();
+        applyRoundResult();
         return;
     }
 
-    setActionButtonsDisabled(false);
-    updateButtons();
-}
-
-function setActionButtonsDisabled(disabled) {
-    hitDeck.draggable = !disabled;
-    hitDeck.style.opacity = disabled ? "0.5" : "1";
-    standBtn.disabled = disabled;
-    doubleBtn.disabled = disabled;
-    splitBtn.disabled = disabled;
-    surrenderBtn.disabled = disabled;
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 }
 
 async function runDealerTurn() {
     game.statusMessage = "Dealer's turn.";
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(1000);
 
     while (game.getDealerScore() < 17) {
         game.statusMessage = "Dealer draws a card...";
-        showHands();
+        showHands(game, playerCardsDiv, delayDealerReveal);
         await sleep(1000);
 
         game.dealerDrawCard();
-        showHands();
+        showHands(game, playerCardsDiv, delayDealerReveal);
         await sleep(1000);
     }
 
     game.finishDealerTurn();
-    showHands();
-    finalizeRound();
-    updateButtons();
+    showHands(game, playerCardsDiv, delayDealerReveal);
+    applyRoundResult();
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 }
 
 betBtn.addEventListener("click", async () => {
@@ -249,52 +275,96 @@ playerCardsDiv.addEventListener("drop", async (event) => {
     const draggedItem = event.dataTransfer.getData("text/plain");
     if (draggedItem !== "hit-card") return;
 
-    setActionButtonsDisabled(true);
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
     game.statusMessage = `${game.splitMode ? `Hand ${game.currentHandIndex + 1}` : game.username} draws a card...`;
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(700);
 
     game.hit();
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(700);
 
     if (game.isCurrentHandBust()) {
         if (game.moveToNextHand()) {
             game.statusMessage = "Hand 1 busts. Playing hand 2.";
-            showHands();
+            showHands(game, playerCardsDiv, delayDealerReveal);
             await sleep(900);
-            setActionButtonsDisabled(false);
-            updateButtons();
+            setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+            updateButtons(
+                game,
+                currentBet,
+                hitDeck,
+                standBtn,
+                restartBtn,
+                doubleBtn,
+                splitBtn,
+                surrenderBtn,
+                betBtn,
+                betInput
+            );
             return;
         }
 
         if (game.hasActiveHand()) {
             await runDealerTurn();
-            setActionButtonsDisabled(false);
-            updateButtons();
+            setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+            updateButtons(
+                game,
+                currentBet,
+                hitDeck,
+                standBtn,
+                restartBtn,
+                doubleBtn,
+                splitBtn,
+                surrenderBtn,
+                betBtn,
+                betInput
+            );
             return;
         }
 
         delayDealerReveal = true;
-        showHands();
+        showHands(game, playerCardsDiv, delayDealerReveal);
         await sleep(900);
         delayDealerReveal = false;
 
         game.finishPlayerBustRound();
-        showHands();
-        finalizeRound();
-        updateButtons();
+        showHands(game, playerCardsDiv, delayDealerReveal);
+        applyRoundResult();
+        updateButtons(
+            game,
+            currentBet,
+            hitDeck,
+            standBtn,
+            restartBtn,
+            doubleBtn,
+            splitBtn,
+            surrenderBtn,
+            betBtn,
+            betInput
+        );
         return;
     }
 
-    setActionButtonsDisabled(false);
-    updateButtons();
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 });
 
 standBtn.addEventListener("click", async () => {
     if (game.isRoundOver) return;
 
-    setActionButtonsDisabled(true);
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
 
     if (game.splitMode) {
         game.statusMessage = `Hand ${game.currentHandIndex + 1} stands.`;
@@ -302,69 +372,135 @@ standBtn.addEventListener("click", async () => {
         game.statusMessage = `${game.username} stands.`;
     }
 
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(800);
 
     if (game.moveToNextHand()) {
         game.statusMessage = "Playing hand 2.";
-        showHands();
+        showHands(game, playerCardsDiv, delayDealerReveal);
         await sleep(800);
-        setActionButtonsDisabled(false);
-        updateButtons();
+        setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+        updateButtons(
+            game,
+            currentBet,
+            hitDeck,
+            standBtn,
+            restartBtn,
+            doubleBtn,
+            splitBtn,
+            surrenderBtn,
+            betBtn,
+            betInput
+        );
         return;
     }
 
     await runDealerTurn();
-    setActionButtonsDisabled(false);
-    updateButtons();
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 });
 
 doubleBtn.addEventListener("click", async () => {
     if (game.isRoundOver || !game.canDouble()) return;
 
-    setActionButtonsDisabled(true);
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
     game.statusMessage = `${game.splitMode ? `Hand ${game.currentHandIndex + 1}` : game.username} doubles.`;
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(700);
 
     game.doubleCurrentHand();
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(900);
 
     if (game.isCurrentHandBust()) {
         if (game.moveToNextHand()) {
             game.statusMessage = "Current hand busts. Playing next hand.";
-            showHands();
+            showHands(game, playerCardsDiv, delayDealerReveal);
             await sleep(800);
-            setActionButtonsDisabled(false);
-            updateButtons();
+            setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+            updateButtons(
+                game,
+                currentBet,
+                hitDeck,
+                standBtn,
+                restartBtn,
+                doubleBtn,
+                splitBtn,
+                surrenderBtn,
+                betBtn,
+                betInput
+            );
             return;
         }
 
         delayDealerReveal = true;
-        showHands();
+        showHands(game, playerCardsDiv, delayDealerReveal);
         await sleep(900);
         delayDealerReveal = false;
 
         game.finishPlayerBustRound();
-        showHands();
-        finalizeRound();
-        updateButtons();
+        showHands(game, playerCardsDiv, delayDealerReveal);
+        applyRoundResult();
+        updateButtons(
+            game,
+            currentBet,
+            hitDeck,
+            standBtn,
+            restartBtn,
+            doubleBtn,
+            splitBtn,
+            surrenderBtn,
+            betBtn,
+            betInput
+        );
         return;
     }
 
     if (game.moveToNextHand()) {
         game.statusMessage = "Double complete. Playing hand 2.";
-        showHands();
+        showHands(game, playerCardsDiv, delayDealerReveal);
         await sleep(800);
-        setActionButtonsDisabled(false);
-        updateButtons();
+        setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+        updateButtons(
+            game,
+            currentBet,
+            hitDeck,
+            standBtn,
+            restartBtn,
+            doubleBtn,
+            splitBtn,
+            surrenderBtn,
+            betBtn,
+            betInput
+        );
         return;
     }
 
     await runDealerTurn();
-    setActionButtonsDisabled(false);
-    updateButtons();
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 });
 
 splitBtn.addEventListener("click", async () => {
@@ -373,25 +509,36 @@ splitBtn.addEventListener("click", async () => {
         return;
     }
 
-    setActionButtonsDisabled(true);
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
     game.statusMessage = "Splitting hand...";
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(800);
 
     game.splitHand();
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(800);
 
     game.statusMessage = "Playing hand 1";
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(800);
 
-    setActionButtonsDisabled(false);
-    updateButtons();
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, false);
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 });
 
 restartBtn.addEventListener("click", async () => {
-    setActionButtonsDisabled(true);
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
     await sleep(200);
     setWaitingForBetState("Round reset. Place a bet to deal again.");
 });
@@ -399,99 +546,40 @@ restartBtn.addEventListener("click", async () => {
 surrenderBtn.addEventListener("click", async () => {
     if (game.isRoundOver || !game.canSurrender()) return;
 
-    setActionButtonsDisabled(true);
+    setActionButtonsDisabled(hitDeck, standBtn, doubleBtn, splitBtn, surrenderBtn, true);
     game.statusMessage = `${game.username} chooses to surrender...`;
-    showHands();
+    showHands(game, playerCardsDiv, delayDealerReveal);
     await sleep(800);
 
     game.surrender();
-    showHands();
-    finalizeRound();
-    updateButtons();
+    showHands(game, playerCardsDiv, delayDealerReveal);
+    applyRoundResult();
+    updateButtons(
+        game,
+        currentBet,
+        hitDeck,
+        standBtn,
+        restartBtn,
+        doubleBtn,
+        splitBtn,
+        surrenderBtn,
+        betBtn,
+        betInput
+    );
 });
 
-function updateButtons() {
-    const roundActive = currentBet > 0 && !game.isRoundOver;
-
-    hitDeck.draggable = roundActive;
-    hitDeck.style.opacity = roundActive ? "1" : "0.5";
-
-    standBtn.disabled = !roundActive;
-    restartBtn.disabled = roundActive;
-    doubleBtn.disabled = !roundActive || !game.canDouble();
-    splitBtn.disabled = !roundActive || !game.canSplit();
-    surrenderBtn.disabled = !roundActive || !game.canSurrender();
-    betBtn.disabled = roundActive;
-    betInput.disabled = roundActive;
-}
-
-function showHands() {
-    const dealerCardsDiv = document.getElementById("dealerCards");
-    const playerScore = document.getElementById("playerScore");
-    const dealerScore = document.getElementById("dealerScore");
-    const gameStatus = document.getElementById("gameStatus");
-
-    playerCardsDiv.innerHTML = "";
-    dealerCardsDiv.innerHTML = "";
-
-    game.playerHands.forEach((hand, index) => {
-        const handWrapper = document.createElement("div");
-        handWrapper.classList.add("hand-wrapper");
-
-        if (game.splitMode && index === game.currentHandIndex && !game.isRoundOver) {
-            handWrapper.classList.add("active-hand");
-        }
-
-        const handLabel = document.createElement("p");
-        handLabel.textContent = game.splitMode ? `Hand ${index + 1} - Score: ${game.calculateScore(hand)}` : "";
-        if (game.splitMode) {
-            handWrapper.appendChild(handLabel);
-        }
-
-        const cardsRow = document.createElement("div");
-        cardsRow.classList.add("split-hand-row");
-
-        hand.forEach((card) => {
-            const cardImgElement = card.render();
-            cardImgElement.alt = `${card.name} of ${card.suit}`;
-            cardsRow.appendChild(cardImgElement);
-        });
-
-        handWrapper.appendChild(cardsRow);
-        playerCardsDiv.appendChild(handWrapper);
-    });
-
-    game.dealerHand.forEach((card, index) => {
-        let cardImgElement;
-
-        if ((!game.isRoundOver || delayDealerReveal) && index === 1) {
-            cardImgElement = document.createElement("img");
-            cardImgElement.classList.add("card");
-            cardImgElement.src = game.deck.cardBackPath;
-            cardImgElement.alt = "Hidden card";
-        } else {
-            cardImgElement = card.render();
-            cardImgElement.alt = `${card.name} of ${card.suit}`;
-        }
-
-        dealerCardsDiv.appendChild(cardImgElement);
-    });
-
-    if (game.splitMode) {
-        playerScore.textContent = `Current hand score: ${game.getPlayerScore()}`;
-    } else {
-        playerScore.textContent = `Score: ${game.getPlayerScore()}`;
-    }
-
-    if (game.isRoundOver) {
-        dealerScore.textContent = `Score: ${game.getDealerScore()}`;
-    } else {
-        dealerScore.textContent = "Score: ?";
-    }
-
-    gameStatus.textContent = game.statusMessage;
-}
-
-updateWinLossDisplay();
+updateWinLossDisplay(winDisplay, lossDisplay, winCount, lossCount);
 setWaitingForBetState();
-loadInitialBalance();
+loadInitialBalance((startingBalance) => {
+    playerMoney = startingBalance;
+    updateBettingDisplay(
+        balanceDisplay,
+        currentBetDisplay,
+        lastResultDisplay,
+        historyList,
+        playerMoney,
+        currentBet,
+        lastResult,
+        gameHistory
+    );
+});
