@@ -1,4 +1,4 @@
-# Blackjack375 Refactor Assignment
+# Blackjack Game Assignment
 
 ## Overview
 
@@ -27,9 +27,6 @@ This project is a web-based Blackjack game that I worked on for CISC375 at the U
    - Then navigate to `http://localhost:8000`
 4. Ensure the `image/` and `scripts/` folders remain next to `index.html`.
 
-Refactoring Assignment
-
-This repository is my fork of my team’s Assignment 2 Blackjack project for CISC375.
 
 Task 1a : 
 The current project has 8 JS files.
