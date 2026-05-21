@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a web-based Blackjack game that I worked on for CISC375 at the University of St. Thomas. The project uses HTML, CSS, and JavaScript, with game logic split into modular components for card handling, deck management, UI updates, and betting.
+This project is a web-based Blackjack game that I worked on for CISC375. The project uses HTML, CSS, and JavaScript, with game logic split into modular components for card handling, deck management, UI updates, and betting.
 
 ## Usage Instructions
 
