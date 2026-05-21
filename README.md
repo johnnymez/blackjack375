@@ -1,3 +1,32 @@
+# Blackjack375 Refactor Assignment
+
+## Overview
+
+This project is a web-based Blackjack game that I worked on for CISC375 at the University of St. Thomas. The project uses HTML, CSS, and JavaScript, with game logic split into modular components for card handling, deck management, UI updates, and betting.
+
+## Usage Instructions
+
+1. Open `index.html` in a web browser.
+2. Enter your username on the home page and start the game.
+3. Place a bet on the player page to begin a round.
+4. Use the available action buttons to play:
+   - Hit
+   - Stand
+   - Double
+   - Split
+   - Surrender
+5. Watch the dealer play and see your win/loss results update.
+6. Use the leaderboard and instructions pages for navigation and game guidance.
+
+## Installation Instructions
+
+1. Clone or download the repository to your local machine.
+2. Open the project folder in your code editor.
+3. Use a local web server if needed, or simply open `index.html` directly in your browser.
+   - For example, with Python 3: `python3 -m http.server`
+   - Then navigate to `http://localhost:8000`
+4. Ensure the `image/` and `scripts/` folders remain next to `index.html`.
+
 Refactoring Assignment
 
 This repository is my fork of my team’s Assignment 2 Blackjack project for CISC375.
